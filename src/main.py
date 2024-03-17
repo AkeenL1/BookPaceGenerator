@@ -16,7 +16,12 @@ def main():
             {
                 "role": "user",
                 "content": [
-                    {"type": "text", "text": "What’s in this image?"},
+                    {"type": "text", "text": "This is a table of contents, "
+                                             "you are a computer analysing this table of contents, for each chapter &"
+                                             "corresponding subchapter you are directed to give the chapter name and what page it starts on."
+                                             "This should be formatted as a list of comma seperated key:value pairings. "
+                                             "Only consider the chapters and subchapters with numbers corresponding to them. "
+                    },
                     {
                         "type": "image_url",
                         "image_url": {
@@ -29,7 +34,7 @@ def main():
         max_tokens=300,
     )
 
-    print(response.choices[0].message)
+    print(response.choices[0].message.content)
 
 
 def encode_image(image_path):
