@@ -2,27 +2,34 @@ import base64
 import openai
 import re
 import os
+from flask import Flask, jsonify, render_template, request
 
 openai.api_key = ""
 
-# 1. Process Images
-# 2. Put Image to chatgpt, get results
-# 3. format & display results
-def main():
-    out = {}
+app = Flask(__name__)
 
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/data', methods=['POST'])
+def data():
+    print("hit")
+    out = {}
+    images = request.files.getlist('files[]')
     image_path = "../images/IMG_1366.jpg"
     directory_path = '../images'
-
+    print(request)
+    print(request.files)
     # for each image in images folder
     # loop through and encode then send to openai
     # append results to dictionary
 
     count = 0
-    for entry in os.listdir(directory_path):
-        full_path = os.path.join(directory_path, entry)
-        base64_image = encode_image(full_path)
-        print(full_path)
+    for entry in images:
+        image_bytes = entry.read()
+        base64_image = base64.b64encode(image_bytes).decode('utf-8')
 
         response = openai.chat.completions.create(
             model="gpt-4-vision-preview",
@@ -38,7 +45,7 @@ def main():
                                                  "chapter name, only provide this list. there should be no space in between the key:value. for example"
                                                  "A chapter named 'The Start' on page 5 would look like '5:'The Start'. Each chapter should be a single string not broken up in any way besides spaces"
                                                  "Only consider the chapters and subchapters with numbers corresponding to them. Each chapter Name should start and end with a ' with no spaces between them, for example 'Chapter Name' not ' Chapter Name' "
-                        },
+                         },
                         {
                             "type": "image_url",
                             "image_url": {
@@ -51,7 +58,6 @@ def main():
             max_tokens=1000,
         )
 
-
         pairs = response.choices[0].message.content.split(',')
         for pair in pairs:
             split_pair = pair.split(':')
@@ -63,15 +69,9 @@ def main():
                     int_key = int(cleaned_key.strip())
                     out[int_key] = cleaned_val.strip()
 
-
     sorted_dict = {k: out[k] for k in sorted(out)}
     print(sorted_dict)
-
-
-def encode_image(image_path):
-    with open(image_path, "rb") as image_file:
-        return base64.b64encode(image_file.read()).decode('utf-8')
-
+    return sorted_dict
 
 if __name__ == "__main__":
-    main()
+    app.run(debug=True)

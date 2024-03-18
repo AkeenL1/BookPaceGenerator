@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>BPG</title>
+    <link rel= "stylesheet" type= "text/css" href= "/static/styles/style.css">
+</head>
+<body>
+    <div id="overlay"></div>
+    <div id="new-book-box">
+        +
+    </div>
+    <div id="new-book-modal">
+        <form id="new-book-form">
+            <label for="new-book-title">Title</label><br>
+            <input type="text" id="new-book-title" name="book-title" placeholder="bing chillin"><br>
+
+            <input type="file" id="files" name="files" multiple>
+        </form>
+
+        <div>
+            <div id="modal-save-btn" class="modal-btn">Save</div>
+            <div id="modal-close-btn" class="modal-btn">Close</div>
+        </div>
+
+    </div>
+</body>
+<script>
+    const bookAddBtn = document.getElementById("new-book-box");
+    const bookAddModal = document.getElementById("new-book-modal")
+    const overlay = document.getElementById("overlay");
+    const modalCloseBtn = document.getElementById("modal-close-btn")
+    const modalSaveBtn = document.getElementById("modal-save-btn")
+    bookAddBtn.onclick = function () {
+        bookAddModal.style.display = "flex"
+        overlay.style.display = "block";
+    }
+
+    modalCloseBtn.onclick = function () {
+        bookAddModal.style.display = "none"
+        overlay.style.display = "none"
+        document.getElementById("new-book-form").reset();
+    }
+
+    modalSaveBtn.onclick = function () {
+        const newBookForm = document.getElementById("new-book-form")
+        let formData = new FormData(newBookForm)
+        let files = document.getElementById("files").files
+        for (let i = 0; i < files.length; i++) {
+            formData.append('files[]', files[i]);
+        }
+
+        fetch('/data', {
+                method: 'POST',
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Network response was not ok.');
+            }).then(data => {
+                console.log(data);
+            }).catch(error => {
+                console.error('There was a problem with the fetch operation:', error);
+            });
+
+        bookAddModal.style.display = "none"
+        overlay.style.display = "none"
+        document.getElementById("new-book-form").reset();
+    }
+</script>
+</html>
