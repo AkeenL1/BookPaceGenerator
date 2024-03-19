@@ -1,6 +1,5 @@
 html {
-    height: 100%;
-    width: 100%;
+    overflow: auto;
 }
 
 body{
@@ -9,10 +8,8 @@ body{
     width: 100%;
     background-color: darkgrey;
 }
-#new-book-box {
-    display: flex;
-    justify-content: center;
-    align-items: center;
+
+.book {
     padding: 0;
     margin: 25px;
     background-color: black;
@@ -20,12 +17,31 @@ body{
     width: 10rem;
     height: 10rem;
     color: white;
-    text-align: center;
-    font-size: 2em;
     border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
 }
 
-#new-book-box:hover {
+#book-table{
+    border: 1px solid black;
+    width:40%;
+    text-align: center;
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid black;
+}
+.book-section {
+    border: 5px groove black;
+}
+
+#new-book-box {
+    font-size: 2em;
+}
+
+.book:hover {
     opacity: 75%;
     cursor: pointer;
 }
@@ -90,4 +106,13 @@ input {
 .modal-btn:hover {
     opacity: 75%;
     cursor: pointer;
+}
+
+#book-detail-list {
+    width: 100%;
+    height: 100%;
+    padding: 50px;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
 }

@@ -6,7 +6,7 @@
 </head>
 <body>
     <div id="overlay"></div>
-    <div id="new-book-box">
+    <div id="new-book-box" class="book">
         +
     </div>
     <div id="new-book-modal">
@@ -21,7 +21,6 @@
             <div id="modal-save-btn" class="modal-btn">Save</div>
             <div id="modal-close-btn" class="modal-btn">Close</div>
         </div>
-
     </div>
 </body>
 <script>
@@ -48,7 +47,7 @@
         for (let i = 0; i < files.length; i++) {
             formData.append('files[]', files[i]);
         }
-
+        console.log(formData)
         fetch('/data', {
                 method: 'POST',
                 body: formData
@@ -67,5 +66,24 @@
         overlay.style.display = "none"
         document.getElementById("new-book-form").reset();
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+    fetch('/get-books')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(book => {
+                const existingBook = document.createElement('div')
+                existingBook.className = 'book'
+                existingBook.innerText = `${book.title}`
+
+                existingBook.addEventListener('click', function() {
+                    window.location.href = `/book_detail?book_id=${book.id}`;
+                })
+
+                bookAddBtn.parentNode.insertBefore(existingBook, bookAddBtn);
+            })
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    });
 </script>
 </html>
