@@ -116,3 +116,7 @@ input {
     align-items: center;
     flex-direction: column;
 }
+
+#book-pacing {
+    position: fixed;
+}

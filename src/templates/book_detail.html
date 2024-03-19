@@ -6,23 +6,126 @@
     <link rel= "stylesheet" type= "text/css" href= "/static/styles/style.css">
 </head>
 <body>
+    <div id="book-pacing">
+        <p id="finished-count-display">Finished: {{finished_count}}</p>
+        <p>Amount Left: {{section_len - finished_count}}</p>
+        <p>Pacing</p>
+        <label for="end-date">End date:</label>
+        <input type="date" id="end-date" name="end-date">
+        <p id="pacing-display"></p>
+        <button id="saveBtn">Save</button>
+    </div>
     <div id="book-detail-list">
         <table id="book-table">
             <thead>
                 <tr>
                     <th>Page</th>
                     <th>Chapter</th>
+                    <th>Finished</th>
                 </tr>
             </thead>
             <tbody>
-                {% for page, chapter in book_detail.items() %}
-                    <tr>
-                        <td>{{ page }}</td>
-                        <td contenteditable="true">{{ chapter }}</td>
+                {% for entry in book_detail %}
+                    <tr data-index="{{ loop.index }}">
+                        <td contenteditable="true">{{ entry.page }}</td>
+                        <td contenteditable="true">{{ entry.chapter }}</td>
+                        <td>
+                            <input type="checkbox" name="book-row-checkbox"
+                                   {% if checkboxes[loop.index - 1] %}
+                                        checked
+                                   {% endif %}
+                            >
+                        </td>
+                        <td>
+                            <button onclick="addRowAbove(this)">Add Row Above</button>
+                            <button onclick="addRowBelow(this)">Add Row Below</button>
+                            <button onclick="deleteRow(this)">Delete</button>
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    <script>
+        let currentUrl = window.location.href;
+
+        let urlParams = new URLSearchParams(new URL(currentUrl).search);
+        console.log(urlParams)
+        let bookId = urlParams.get('book_id');
+        console.log(bookId)
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            let tableRows = document.getElementById('book-table').rows
+            let bookDetails = [];
+            let finishedCount = 0;
+            for (let i = 1; i < tableRows.length; i++) {
+                let page = tableRows[i].cells[0].innerText;
+                let chapter = tableRows[i].cells[1].innerText;
+                bookDetails.push({ page: page, chapter: chapter });
+                let checkbox = tableRows[i].cells[2].getElementsByTagName('input')[0];
+                if (checkbox.checked) {
+                    finishedCount += 1;
+                }
+            }
+            console.log(bookDetails)
+            fetch('/add-book', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    bookId: bookId,
+                    bookContents: bookDetails,
+                    finishedCount: finishedCount
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        });
+
+        function calculateDaysUntil(endDate) {
+            const today = new Date();
+            const end = new Date(endDate);
+            const timeDiff = end - today;
+            const daysUntil = Math.ceil(timeDiff / (1000 * 60 * 60 * 24));
+            return daysUntil;
+        }
+
+        function updatePacing() {
+            const endDate = document.getElementById('end-date').value;
+            const daysUntil = calculateDaysUntil(endDate);
+            const sectionsLeft = {{ section_len - finished_count }};
+            const pacing = daysUntil > 0 ? sectionsLeft / daysUntil : 'N/A';
+
+            document.getElementById('pacing-display').textContent = `Pacing: ${Math.ceil(pacing)} sections/day`;
+        }
+
+        document.getElementById('end-date').addEventListener('change', updatePacing);
+
+        function addRowAbove(button) {
+            var row = button.parentNode.parentNode;
+            var index = row.getAttribute('data-index');
+            var newRow = row.cloneNode(true);
+            newRow.setAttribute('data-index', parseInt(index) + 0.5); // Set a new index
+            row.parentNode.insertBefore(newRow, row);
+        }
+
+        function addRowBelow(button) {
+            var row = button.parentNode.parentNode;
+            var index = row.getAttribute('data-index');
+            var newRow = row.cloneNode(true);
+            newRow.setAttribute('data-index', parseInt(index) + 0.5); // Set a new index
+            row.parentNode.insertBefore(newRow, row.nextSibling);
+        }
+
+        function deleteRow(button) {
+            var row = button.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+        }
+    </script>
 </body>
 </html>

@@ -10,18 +10,29 @@ import sqlite3
 openai.api_key = ""
 
 app = Flask(__name__)
-
+app.jinja_env.globals.update(zip=zip)
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
+
 @app.route('/book_detail', methods=['GET'])
 def book_detail():
     book_id = request.args.get('book_id')
-    contents = get_book(book_id)
+    contents, finished_count = get_book(book_id)
+    print("here")
     print(contents)
-    return render_template('book_detail.html', book_detail=contents)
+    checkboxes_checked = []
+    for i in range(len(contents)):
+        if i < finished_count:
+            checkboxes_checked.append(True)
+        else:
+            checkboxes_checked.append(False)
+
+    print(contents)
+    return render_template('book_detail.html', book_detail=contents, checkboxes=checkboxes_checked, finished_count=finished_count, section_len=len(contents))
+
 
 @app.route('/data', methods=['POST'])
 def data():
@@ -108,18 +119,41 @@ def get_all_books():
 
 
 def get_book(book_id):
+    finished_count = 0
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute('SELECT contents FROM BOOKS WHERE id = ?', (book_id,))
+    cursor.execute('SELECT contents, finished_count FROM BOOKS WHERE id = ?', (book_id,))
     books = cursor.fetchone()
     conn.close()
     if books:
         book_contents = json.loads(books['contents'])
+        finished_count = books['finished_count']
     else:
         book_contents = {}
 
-    return book_contents
+    return book_contents, finished_count
+
+
+@app.route('/add-book', methods=['POST'])
+def update_book():
+    book_id = request.get_json().get('bookId')
+    contents = request.get_json().get('bookContents')
+    finished_count = request.get_json().get('finishedCount')
+    finished_count = int(finished_count)
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    # Convert the new contents to a JSON string
+    new_contents_json = json.dumps(contents)
+    print(book_id)
+    print(new_contents_json)
+    # Update the database
+    cursor.execute('UPDATE BOOKS SET contents = ?, finished_count = ? WHERE id = ?',
+                   (new_contents_json, finished_count, book_id))
+    conn.commit()
+    conn.close()
+    return jsonify({'status': 'success'})
+
 
 def get_db_connection():
     conn = sqlite3.connect('database.db')
@@ -134,7 +168,8 @@ def init_db():
         'CREATE TABLE IF NOT EXISTS BOOKS ('
         'id INTEGER PRIMARY KEY AUTOINCREMENT, '
         'title TEXT, '
-        'contents DICT)'
+        'contents DICT,'
+        'finished_count INT)'
     )
     conn.commit()
     conn.close()
