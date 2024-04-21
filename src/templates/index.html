@@ -5,25 +5,34 @@
     <link rel= "stylesheet" type= "text/css" href= "/static/styles/style.css">
 </head>
 <body>
-    <div id="overlay"></div>
-    <div id="new-book-box" class="book">
-        +
+    <div id="book-report-div">
+        <div id="overlay"></div>
+        <div id="new-book-box" class="book">
+            +
+        </div>
+        <div id="new-book-modal">
+            <form id="new-book-form">
+                <label for="new-book-title">Title</label><br>
+                <input type="text" id="new-book-title" name="book-title" placeholder="bing chillin"><br>
+
+                <input type="file" id="files" name="files" multiple>
+            </form>
+
+            <div>
+                <div id="modal-save-btn" class="modal-btn">Save</div>
+                <div id="modal-close-btn" class="modal-btn">Close</div>
+            </div>
+        </div>
     </div>
-    <div id="new-book-modal">
-        <form id="new-book-form">
-            <label for="new-book-title">Title</label><br>
-            <input type="text" id="new-book-title" name="book-title" placeholder="bing chillin"><br>
-
-            <input type="file" id="files" name="files" multiple>
-        </form>
-
-        <div>
-            <div id="modal-save-btn" class="modal-btn">Save</div>
-            <div id="modal-close-btn" class="modal-btn">Close</div>
+    <div id="habit-tracker-button-div">
+        <div id="habit-tracker-button">
+            Habit Tracker
         </div>
     </div>
 </body>
+
 <script>
+    // book tracker stuff
     const bookAddBtn = document.getElementById("new-book-box");
     const bookAddModal = document.getElementById("new-book-modal")
     const overlay = document.getElementById("overlay");
@@ -67,6 +76,7 @@
         document.getElementById("new-book-form").reset();
     }
 
+    // content loaded
     document.addEventListener('DOMContentLoaded', function() {
     fetch('/get-books')
         .then(response => response.json())
@@ -85,5 +95,11 @@
         })
         .catch(error => console.error('Error fetching data:', error));
     });
+
+    // habit tracker
+    const habitTrackerBtn = document.getElementById("habit-tracker-button")
+    habitTrackerBtn.onclick = function () {
+        window.location.href = `/habit_tracker`
+    }
 </script>
 </html>

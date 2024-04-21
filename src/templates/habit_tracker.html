@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Habit Tracker</title>
+    <link rel= "stylesheet" type= "text/css" href= "/static/styles/style.css">
+</head>
+<body id="habit-tracker-body">
+    <div id="new-number-habit">
+
+    </div>
+    <div id="new-checkbox-habit">
+
+    </div>
+    <div id="habit-creation-modal">
+        HABIT MODAL
+    </div>
+    <div id="habit-top-div">
+        <div>
+            TITLE
+        </div>
+        <div id="habit-inner-div">
+            <div id="days">
+                <div>
+                    SUN
+                </div>
+                <div></div>
+                <div></div>
+                <div>
+                    WED
+                </div>
+                <div></div>
+                <div></div>
+                <div>
+                    SAT
+                </div>
+            </div>
+
+            <div id="habit-box">
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const yearContainer = document.getElementById('habit-box');
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const isLeapYear = new Date(year, 1, 29).getDate() === 29;
+        const daysInYear = isLeapYear ? 366 : 365;
+        const startOfYear = new Date(year, 0, 1);
+        const firstDayOfWeek = startOfYear.getDay();
+
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'day empty';
+            yearContainer.appendChild(emptyDiv);
+        }
+
+        for (let day = 0; day < daysInYear; day++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'habit-day';
+            const dateOfDiv = new Date(startOfYear);
+            dateOfDiv.setDate(dateOfDiv.getDate() + day);
+            if (dateOfDiv.toDateString() === currentDate.toDateString()) {
+                dayDiv.className = 'current-day';
+                console.log(day)
+            }
+
+            dayDiv.onclick = function () {
+                if (dayDiv.style.backgroundColor === 'blue') {
+                    dayDiv.style.backgroundColor = 'black'
+                }else dayDiv.style.backgroundColor = 'blue'
+            }
+            yearContainer.appendChild(dayDiv);
+        }
+    });
+
+</script>
+</html>

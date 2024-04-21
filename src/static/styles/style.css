@@ -4,10 +4,13 @@ html {
 
 body{
     display: flex;
+    flex-direction: column;
     height: 100%;
     width: 100%;
     background-color: darkgrey;
 }
+
+/* book tracker */
 
 .book {
     padding: 0;
@@ -30,9 +33,11 @@ body{
     text-align: center;
     border-collapse: collapse;
 }
+
 th, td {
     border: 1px solid black;
 }
+
 .book-section {
     border: 5px groove black;
 }
@@ -44,6 +49,10 @@ th, td {
 .book:hover {
     opacity: 75%;
     cursor: pointer;
+}
+
+#book-report-div {
+    display: flex;
 }
 
 #new-book-modal {
@@ -119,4 +128,113 @@ input {
 
 #book-pacing {
     position: fixed;
+}
+
+/* Habit Tracker */
+
+#habit-tracker-body {
+    display: flex;
+    flex-direction: column;
+}
+
+#habit-tracker-button-div {
+    border-top: solid black;
+    padding: 1rem;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+}
+
+#habit-tracker-button {
+    background-color: black;
+    opacity: 50%;
+    padding: 1rem;
+    border-radius: .5rem;
+    color: white;
+}
+
+#habit-tracker-button:hover {
+    opacity: 75%;
+    cursor: pointer;
+}
+
+#habit-tracker-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#habit-box {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(7, 25px); /* Creates 7 columns */
+    grid-gap: 2px; /* Space between squares */
+    justify-content: center; /* Center grid horizontally */
+    width: 100%;
+}
+
+#days {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(7, 25px); /* Creates 7 columns */
+    grid-gap: 2px; /* Space between squares */
+    justify-content: center; /* Center grid horizontally */
+    margin: 1em;
+    font-size: .75em;
+}
+
+#habit-top-div {
+    width: 60%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: solid 1px black;
+    border-radius: 2em;
+}
+
+#habit-inner-div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1rem;
+}
+
+#title{
+
+}
+
+.habit-day {
+    width: 13px;
+    height: 13px;
+    border: solid 1px transparent;
+    background-color: black;
+    opacity: 50%;
+    margin: 1px;
+}
+
+.habit-day:hover {
+    border-color: white;
+    cursor: pointer;
+}
+
+.current-day {
+    width: 13px;
+    height: 13px;
+    border: solid 1px white;
+    background-color: #000000;
+    opacity: 50%;
+    margin: 1px;
+}
+
+.empty {
+    background-color: transparent; /* or any color that indicates absence */
+    border: none; /* Hide border if not needed */
+}
+
+.current-day:hover {
+    border-color: white;
+    cursor: pointer;
 }

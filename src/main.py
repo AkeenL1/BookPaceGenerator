@@ -7,7 +7,7 @@ import os
 from flask import Flask, jsonify, render_template, request
 import sqlite3
 
-openai.api_key = ""
+openai.api_key = 
 
 app = Flask(__name__)
 app.jinja_env.globals.update(zip=zip)
@@ -16,7 +16,7 @@ app.jinja_env.globals.update(zip=zip)
 def index():
     return render_template('index.html')
 
-
+# book tracker
 @app.route('/book_detail', methods=['GET'])
 def book_detail():
     book_id = request.args.get('book_id')
@@ -154,7 +154,7 @@ def update_book():
     conn.close()
     return jsonify({'status': 'success'})
 
-
+# db setup
 def get_db_connection():
     conn = sqlite3.connect('database.db')
     conn.row_factory = sqlite3.Row  # This allows accessing the columns by name
@@ -171,6 +171,7 @@ def init_db():
         'contents DICT,'
         'finished_count INT)'
     )
+
     conn.commit()
     conn.close()
 
@@ -182,6 +183,11 @@ def add_book(title, content):
     conn.commit()
     conn.close()
 
+
+# habit tracker
+@app.route('/habit_tracker', methods=['GET'])
+def habit_tracker():
+    return render_template('habit_tracker.html')
 
 if __name__ == "__main__":
     init_db()
