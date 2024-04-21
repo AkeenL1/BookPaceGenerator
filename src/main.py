@@ -12,9 +12,11 @@ openai.api_key =
 app = Flask(__name__)
 app.jinja_env.globals.update(zip=zip)
 
+
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 # book tracker
 @app.route('/book_detail', methods=['GET'])
@@ -31,7 +33,8 @@ def book_detail():
             checkboxes_checked.append(False)
 
     print(contents)
-    return render_template('book_detail.html', book_detail=contents, checkboxes=checkboxes_checked, finished_count=finished_count, section_len=len(contents))
+    return render_template('book_detail.html', book_detail=contents, checkboxes=checkboxes_checked,
+                           finished_count=finished_count, section_len=len(contents))
 
 
 @app.route('/data', methods=['POST'])
@@ -154,6 +157,7 @@ def update_book():
     conn.close()
     return jsonify({'status': 'success'})
 
+
 # db setup
 def get_db_connection():
     conn = sqlite3.connect('database.db')
@@ -172,6 +176,25 @@ def init_db():
         'finished_count INT)'
     )
 
+    conn.execute(
+        'CREATE TABLE IF NOT EXISTS CHECKBOXHABITS ('
+        'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+        'title TEXT, '
+        'habit_type TEXT,'
+        'days TEXT,'
+        'color TEXT)'
+    )
+
+    conn.execute(
+        'CREATE TABLE IF NOT EXISTS NUMBERHABITS ('
+        'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+        'title TEXT, '
+        'habit_type TEXT,'
+        'days TEXT,'
+        'color TEXT,'
+        'metric TEXT)'
+    )
+
     conn.commit()
     conn.close()
 
@@ -188,6 +211,105 @@ def add_book(title, content):
 @app.route('/habit_tracker', methods=['GET'])
 def habit_tracker():
     return render_template('habit_tracker.html')
+
+
+@app.route('/get-habits', methods=['GET'])
+def get_habits():
+    # title,metrics*,days,color,type
+    conn = sqlite3.connect('database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM CHECKBOXHABITS')
+    checkbox_habits = cursor.fetchall()
+    cursor.execute('SELECT * FROM NUMBERHABITS')
+    numeric_habits = cursor.fetchall()
+    conn.close()
+    all_habits = list(checkbox_habits) + list(numeric_habits)
+    return jsonify([dict(row) for row in all_habits])
+
+
+@app.route('/update-habit-day', methods=['POST'])
+def update_habit_day():
+    # Parse data from the incoming JSON request
+    data = request.get_json()
+    habit_id = data.get('habitId')
+    new_day = str(data.get('day'))
+    habit_type = data.get('type')
+
+    # Connect to the database
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+
+    if habit_type == 'habit-type-is-checkbox':
+        # Fetch the current days as a JSON array
+        cursor.execute('SELECT days FROM CHECKBOXHABITS WHERE id = ?', (habit_id,))
+        result = cursor.fetchone()
+        if result:
+            current_days = json.loads(result[0])  # Deserialize the JSON string into a Python list
+            if new_day not in current_days:  # Check if the day is not already in the list
+                current_days.append(new_day)  # Append the new day
+                updated_days = json.dumps(current_days)  # Serialize the list back into JSON
+            else:
+                current_days.remove(new_day)
+                updated_days = json.dumps(current_days)
+
+            cursor.execute('UPDATE CHECKBOXHABITS SET days = ? WHERE id = ?', (updated_days, habit_id))
+            conn.commit()
+            conn.close()
+            return jsonify({'status': 'success'})
+        else:
+            conn.close()
+            return jsonify({'status': 'habit not found'})
+    else:
+        cursor.execute('SELECT days FROM NUMBERHABITS WHERE id = ?', (habit_id,))
+        result = cursor.fetchone()
+        if result:
+            current_days = json.loads(result[0])
+            print(current_days)# Deserialize the JSON string into a Python list
+            if new_day not in current_days:  # Check if the day is not already in the list
+                current_days.append(new_day)  # Append the new day
+                updated_days = json.dumps(current_days)  # Serialize the list back into JSON
+            else:
+                current_days.remove(new_day)
+                updated_days = json.dumps(current_days)
+
+            cursor.execute('UPDATE NUMBERHABITS SET days = ? WHERE id = ?', (updated_days, habit_id))
+            conn.commit()
+            conn.close()
+            return jsonify({'status': 'success'})
+        else:
+            conn.close()
+            return jsonify({'status': 'habit not found'})
+        conn.close()
+        return jsonify({'status': 'success'})
+
+
+    conn.close()
+    return jsonify({'status': 'invalid type'})
+
+
+@app.route('/add-habit', methods=['POST'])
+def save_habit():
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    print("high")
+    print(request.form)
+    title = request.form['habit-name']
+    habit_type = request.form['habit-type-selector']
+    color = request.form['color']
+    metric = request.form['habit-metric']
+    if habit_type == 'habit-type-is-numeric':
+        days = "[]"
+        cursor.execute('INSERT INTO NUMBERHABITS (title, habit_type, color,days, metric) VALUES (?, ?, ?, ?, ?)',
+                       (title, habit_type, color, days, metric))
+    else:
+        days = "[]"
+        cursor.execute('INSERT INTO CHECKBOXHABITS (title, habit_type, color,days) VALUES (?, ?, ?, ?)',
+                       (title, habit_type, color, days))
+    conn.commit()
+    conn.close()
+    return {'status': 'success'}
+
 
 if __name__ == "__main__":
     init_db()

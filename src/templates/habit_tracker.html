@@ -6,44 +6,139 @@
     <link rel= "stylesheet" type= "text/css" href= "/static/styles/style.css">
 </head>
 <body id="habit-tracker-body">
-    <div id="new-number-habit">
-
+    <div id="habit-tracker-new-habit-button">
+        Create Habit
     </div>
-    <div id="new-checkbox-habit">
-
-    </div>
+    <div id="overlay"></div>
     <div id="habit-creation-modal">
-        HABIT MODAL
+        <form id="habit-creation-modal-form">
+            <div id="habit-creation-modal-title">
+                <label for="habit-name">Habit:</label>
+                <input type="text" id="habit-name" name="habit-name">
+            </div>
+            <div id="habit-creation-modal-title-choices">
+                <label for="numeric-type-selection">Numeric</label>
+                <input type="radio" id="numeric-type-selection" name="habit-type-selector" value="habit-type-is-numeric"/>
+                <label for="checkbox-type-selection">Checkbox</label>
+                <input type="radio" id="checkbox-type-selection" name="habit-type-selector" value="habit-type-is-checkbox" checked/>
+            </div>
+            <div id="habit-creation-modal-metric">
+                <label for="habit-metric">metric:</label>
+                <input type="text" id="habit-metric" name="habit-metric">
+            </div>
+            <label for="colorPicker">Choose a color:</label>
+            <input type="color" id="colorPicker" name="color" value="#e66465" />
+            <div id="output" style="margin-top: 20px;">Selected Color: #ff0000</div>
+        </form>
+        <div>
+            <div id="modal-save-btn" class="modal-btn">Save</div>
+            <div id="modal-close-btn" class="modal-btn">Close</div>
+        </div>
+    </div>
+    <div id="habit-numeric-day-amount-div">
+        <form id="habit-numeric-day-amount-form">
+            <label for="habit-numeric-day-amount">Amount:</label>
+            <input type="text" id="habit-numeric-day-amount" name="habit-numeric-day-amount">
+        </form>
+        <div>
+            <div id="numeric-modal-save-btn" class="modal-btn">Save</div>
+            <div id="numeric-modal-close-btn" class="modal-btn">Close</div>
+        </div>
     </div>
     <div id="habit-top-div">
-        <div>
-            TITLE
-        </div>
         <div id="habit-inner-div">
-            <div id="days">
-                <div>
-                    SUN
-                </div>
-                <div></div>
-                <div></div>
-                <div>
-                    WED
-                </div>
-                <div></div>
-                <div></div>
-                <div>
-                    SAT
-                </div>
-            </div>
-
-            <div id="habit-box">
-            </div>
         </div>
     </div>
 </body>
 <script>
+    const newHabitBtn = document.getElementById('habit-tracker-new-habit-button')
+    const habitCreationModal = document.getElementById('habit-creation-modal')
+    const overlay = document.getElementById('overlay')
+    const modalCloseBtn = document.getElementById('modal-close-btn')
+    const modalSaveBtn = document.getElementById('modal-save-btn')
+    const habitMetric = document.getElementById('habit-creation-modal-metric')
+    const habitNumericDayModal = document.getElementById('habit-numeric-day-amount-div')
+    const numericModalCloseBtn = document.getElementById('numeric-modal-close-btn')
+    const numericModalOpenBtn = document.getElementById('numeric-modal-save-btn')
+    const numericHabitForm = document.getElementById("habit-numeric-day-amount-form")
+    newHabitBtn.onclick = function () {
+        habitCreationModal.style.display = 'flex'
+        habitCreationModal.style.flexDirection = 'column'
+        overlay.style.display = 'block'
+    }
+
+    modalCloseBtn.onclick = function () {
+        habitCreationModal.style.display = "none"
+        overlay.style.display = "none"
+        document.getElementById("habit-creation-modal-form").reset();
+    }
+
+    numericModalCloseBtn.onclick = function () {
+        habitNumericDayModal.style.display = "none"
+        //overlay.style.display = "none"
+        document.getElementById("habit-numeric-day-amount-form").reset();
+    }
+     modalSaveBtn.onclick = function () {
+        const newHabitForm = document.getElementById("habit-creation-modal-form")
+        let formData = new FormData(newHabitForm)
+        fetch('/add-habit', {
+            method: 'POST',
+            body: formData
+        }).then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Network response was not ok.');
+        }).then(data => {
+            console.log(data);
+        }).catch(error => {
+            console.error('There was a problem with the fetch operation:', error);
+        });
+        console.log(formData)
+        habitCreationModal.style.display = "none"
+        overlay.style.display = "none"
+        document.getElementById("habit-creation-modal-form").reset();
+
+    }
+
+    document.getElementById('colorPicker').addEventListener('input', function() {
+      var color = this.value;
+      document.getElementById('output').textContent = 'Selected Color: ' + color;
+    });
+
+    document.getElementById('numeric-type-selection').onclick = function () {
+       habitMetric.style.display = 'block'
+    }
+
+    document.getElementById('checkbox-type-selection').onclick = function () {
+       habitMetric.style.display = 'none'
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        const yearContainer = document.getElementById('habit-box');
+
+        // get the data
+        fetch('/get-habits')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(habit => {
+                    console.log(habit)
+                    create_chart(habit)
+                })
+            })
+            .catch(error => console.error('Error fetching data:', error));
+    });
+
+    function create_chart(habit) {
+        const habitInnerDiv = document.getElementById('habit-inner-div')
+        const titleContainer = document.createElement('div')
+        titleContainer.innerHTML = habit.title
+        if (habit.habit_type == 'habit-type-is-numeric') {
+            titleContainer.innerHTML += ' - '
+            titleContainer.innerHTML += habit.metric
+        }
+        habitInnerDiv.appendChild(titleContainer)
+        const yearContainer = document.createElement('div');
+        yearContainer.className = 'habit-box'
         const currentDate = new Date();
         const year = currentDate.getFullYear();
         const isLeapYear = new Date(year, 1, 29).getDate() === 29;
@@ -57,6 +152,8 @@
             yearContainer.appendChild(emptyDiv);
         }
 
+        let daysArr = JSON.parse(habit.days)
+        const habitColor = hexToRGB(habit.color)
         for (let day = 0; day < daysInYear; day++) {
             const dayDiv = document.createElement('div');
             dayDiv.className = 'habit-day';
@@ -66,15 +163,116 @@
                 dayDiv.className = 'current-day';
                 console.log(day)
             }
+            if(habit.habit_type === 'habit-type-is-checkbox'){
+                 if(daysArr.includes(day.toString())){
+                    dayDiv.style.backgroundColor = habitColor;
+                }
+            } else {
+                const highestValue = JSON.parse(habit.days).reduce((acc, current) => {
+                    return (acc.value > current.value) ? acc : current;
+                });
+                let min_opacity = 0.4
+                JSON.parse(habit.days).forEach( habitDay => {
+                    const object = JSON.parse(habitDay.replace(/'/g, '"'));
+                    const hashMap = new Map(Object.entries(object));
+                    if (hashMap.has(day.toString())) {
+                        let opacity = min_opacity + (Object.values(hashMap)[0] / highestValue) * (100 - min_opacity)
+                        dayDiv.style.opacity = opacity.toFixed(2);
+                        if (hashMap.get(day.toString()) === "0") {
+                            dayDiv.style.backgroundColor = '#565656'
+                        } else {
+                            dayDiv.style.backgroundColor = habitColor
+                        }
+                        console.log('blah')
+                    }
+
+                    console.log(highestValue)
+                })
+            }
 
             dayDiv.onclick = function () {
-                if (dayDiv.style.backgroundColor === 'blue') {
-                    dayDiv.style.backgroundColor = 'black'
-                }else dayDiv.style.backgroundColor = 'blue'
+                console.log(habit.color)
+                console.log(dayDiv.style.backgroundColor)
+                if (habit.habit_type === 'habit-type-is-numeric') {
+                    habitNumericDayModal.style.display = 'flex'
+                }
+
+                if (dayDiv.style.backgroundColor === habitColor && habit.habit_type === 'habit-type-is-checkbox') {
+                    dayDiv.style.backgroundColor = '#565656'
+                }else {
+                    dayDiv.style.backgroundColor = habitColor
+                }
+
+                if (habit.habit_type == 'habit-type-is-numeric') {
+                    numericModalOpenBtn.onclick = function () {
+                    let formData = new FormData(numericHabitForm)
+                    let amount = formData.get("habit-numeric-day-amount")
+                    day_hash = {}
+                    day_hash[day] = amount
+                    fetch('/update-habit-day', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            habitId: habit.id,
+                            day: day_hash,
+                            type: habit.habit_type
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+                     habitNumericDayModal.style.display = "none"
+                    //overlay.style.display = "none"
+                    document.getElementById("habit-numeric-day-amount-form").reset();
+                }
+                } else {
+                    fetch('/update-habit-day', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            habitId: habit.id,
+                            day: day,
+                            type: habit.habit_type
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+                }
             }
             yearContainer.appendChild(dayDiv);
         }
-    });
+        habitInnerDiv.appendChild(yearContainer)
+    }
+
+    function hexToRGB(hex) {
+        let r = 0, g = 0, b = 0;
+        // 3 digits
+        if (hex.length === 4) {
+            r = parseInt(hex[1] + hex[1], 16);
+            g = parseInt(hex[2] + hex[2], 16);
+            b = parseInt(hex[3] + hex[3], 16);
+        }
+        // 6 digits
+        else if (hex.length === 7) {
+            r = parseInt(hex[1] + hex[2], 16);
+            g = parseInt(hex[3] + hex[4], 16);
+            b = parseInt(hex[5] + hex[6], 16);
+        }
+        return "rgb(" + r + ", " + g + ", " + b + ")";
+    }
 
 </script>
 </html>
